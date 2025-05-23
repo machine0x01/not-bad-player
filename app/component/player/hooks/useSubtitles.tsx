@@ -42,7 +42,6 @@ const parseVTT = async (url: string): Promise<Cue[]> => {
   return cues;
 };
 
-// subtitleUrls is a map of lang code to URL, e.g. { eng: "/eng.vtt", spa: "/spa.vtt" }
 export const useSubtitles = (
   subtitleUrls: Record<string, string | null>,
   selectedLang: string,

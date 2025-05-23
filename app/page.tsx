@@ -5,9 +5,9 @@ export default function Home() {
     "eng": "/assets/eng-sub.vtt"
   }
   return (
-    <div className="bg-white h-screen flex items-center justify-center">
-     <div className="w-1/2">
-     <NotBadVideoPlayer source="/assets/video.mp4" subtitleFiles={subtitle} />
+    <div className="bg-white  h-[2000px] flex items-center justify-center">
+     <div className="w-1/2 ">
+     <NotBadVideoPlayer playOnlyInView source="/assets/video.mp4" subtitleFiles={subtitle} />
      </div>
     </div>
   );

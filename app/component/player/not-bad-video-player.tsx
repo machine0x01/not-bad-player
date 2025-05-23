@@ -20,11 +20,17 @@ interface SubtitleFiles {
 interface NotBadVideoPlayerProps {
   subtitleFiles?: SubtitleFiles;
   source : string
+  playOnlyInView?: Boolean
+  customStyles?: {
+    progressBar: string
+  }
 }
 
 const NotBadVideoPlayer: React.FC<NotBadVideoPlayerProps> = ({
   subtitleFiles,
-  source
+  source,
+  playOnlyInView,
+  customStyles= {progressBar:"#22c55e"}
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -147,6 +153,32 @@ const NotBadVideoPlayer: React.FC<NotBadVideoPlayerProps> = ({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isFullscreen]);
+
+  useEffect(() => {
+    if (!playOnlyInView || !containerRef.current || !videoRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!videoRef.current) return;
+
+        if (entry.isIntersecting) {
+          videoRef.current.play().catch(() => {
+          });
+        } else {
+          videoRef.current.pause();
+        }
+      },
+      {
+        threshold: 0.5, 
+      }
+    );
+
+    observer.observe(containerRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [playOnlyInView]);
 
   return (
     <div
@@ -325,8 +357,9 @@ const NotBadVideoPlayer: React.FC<NotBadVideoPlayerProps> = ({
               >
                 <div className={`w-full ${isFullscreen ? "h-3" : "h-2"} bg-white/20 rounded-full`}>
                   <div
-                    className="h-full bg-blue-500 rounded-full transition-all duration-200"
-                    style={{ width: `${progressPercentage}%` }}
+
+                    className="h-full  rounded-full transition-all duration-200"
+                    style={{ width: `${progressPercentage}%`, backgroundColor:customStyles.progressBar }}
                   />
                 </div>
               </div>
