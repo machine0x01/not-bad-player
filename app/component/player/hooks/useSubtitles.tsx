@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { useEffect, useState } from "react";
 
 export interface Cue {
@@ -14,7 +14,7 @@ const parseVTTTime = (time: string) => {
     parseInt(h) * 3600 +
     parseInt(m) * 60 +
     parseInt(sec) +
-    parseInt(ms) / 1000
+    (ms ? parseInt(ms) / 1000 : 0)
   );
 };
 
@@ -29,6 +29,7 @@ const parseVTT = async (url: string): Promise<Cue[]> => {
     const lines = block.trim().split("\n");
     if (lines.length >= 2) {
       const [start, end] = lines[0].split(" --> ");
+      if (!start || !end) continue;
       const text = lines.slice(1).join("\n");
       cues.push({
         start: parseVTTTime(start),
@@ -41,20 +42,47 @@ const parseVTT = async (url: string): Promise<Cue[]> => {
   return cues;
 };
 
-export const useSubtitles = (subtitleUrl: string, currentTime: number) => {
-  const [cues, setCues] = useState<Cue[]>([]);
+// subtitleUrls is a map of lang code to URL, e.g. { eng: "/eng.vtt", spa: "/spa.vtt" }
+export const useSubtitles = (
+  subtitleUrls: Record<string, string | null>,
+  selectedLang: string,
+  currentTime: number
+) => {
+  const [cuesMap, setCuesMap] = useState<Record<string, Cue[]>>({});
   const [subtitleText, setSubtitleText] = useState("");
 
   useEffect(() => {
-    parseVTT(subtitleUrl).then(setCues);
-  }, [subtitleUrl]);
+    const loadAll = async () => {
+      const newCuesMap: Record<string, Cue[]> = {};
+      await Promise.all(
+        Object.entries(subtitleUrls).map(async ([lang, url]) => {
+          if (url) {
+            try {
+              const cues = await parseVTT(url);
+              newCuesMap[lang] = cues;
+            } catch {
+              newCuesMap[lang] = [];
+            }
+          } else {
+            newCuesMap[lang] = [];
+          }
+        })
+      );
+      setCuesMap(newCuesMap);
+    };
+    loadAll();
+  }, [subtitleUrls]);
 
   useEffect(() => {
-    const cue = cues.find(
+    if (!selectedLang || !cuesMap[selectedLang]) {
+      setSubtitleText("");
+      return;
+    }
+    const cue = cuesMap[selectedLang].find(
       (cue) => currentTime >= cue.start && currentTime <= cue.end
     );
     setSubtitleText(cue?.text || "");
-  }, [currentTime, cues]);
+  }, [currentTime, selectedLang, cuesMap]);
 
   return subtitleText;
 };

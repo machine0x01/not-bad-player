@@ -1,9 +1,9 @@
 # Features
 
 - styling [in progress]
-- controlls 
-- partisioning
+- controlls [Done]
+- partisioning 
 - commend in certen time
 - responsive
 - performance
-- subtitles
+- subtitles [done]
